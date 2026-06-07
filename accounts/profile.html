@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Career Profile — ResumeForge{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl px-6 py-10">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-white">Career Profile</h1>
+    <p class="mt-1.5 text-sm text-slate-400">Your master resume corpus — the NLP engine vectorizes this against every job description.</p>
+  </div>
+  <form method="post" class="space-y-8">
+    {% csrf_token %}
+
+    <!-- Contact -->
+    <fieldset class="rounded-2xl border border-slate-800 bg-slate-900 p-6 space-y-4">
+      <legend class="text-xs font-semibold uppercase tracking-widest text-slate-500 px-2">Contact Info</legend>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">First name</label>
+          <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}"
+            class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Last name</label>
+          <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}"
+            class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
+          <input type="email" name="email" value="{{ form.email.value|default:'' }}"
+            class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Phone</label>
+          <input type="text" name="phone" value="{{ form.phone.value|default:'' }}"
+            class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Location</label>
+          <input type="text" name="location" value="{{ form.location.value|default:'' }}"
+            class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">LinkedIn URL</label>
+          <input type="text" name="linkedin_url" value="{{ form.linkedin_url.value|default:'' }}"
+            class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">Portfolio URL</label>
+          <input type="text" name="portfolio_url" value="{{ form.portfolio_url.value|default:'' }}"
+            class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Career sections -->
+    {% for section, label, rows, hint in sections %}
+    <fieldset class="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+      <legend class="text-xs font-semibold uppercase tracking-widest text-slate-500 px-2">{{ label }}</legend>
+      {% if hint %}<p class="mt-2 mb-3 text-xs text-slate-500 font-mono whitespace-pre-line leading-relaxed">{{ hint }}</p>{% endif %}
+      <textarea name="{{ section }}" id="id_{{ section }}" rows="{{ rows }}"
+        class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-100 font-mono leading-relaxed focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition resize-y">{{ form|dictsort:section }}{% for field in form %}{% if field.html_name == section %}{{ field.value|default:'' }}{% endif %}{% endfor %}</textarea>
+    </fieldset>
+    {% endfor %}
+
+    <button type="submit" class="w-full rounded-xl bg-brand py-3 text-sm font-bold text-white hover:bg-brand-dark transition-all shadow-xl shadow-brand/30">
+      Save Career Profile
+    </button>
+  </form>
+</div>
+{% endblock %}

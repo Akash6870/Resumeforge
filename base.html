@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}ResumeForge{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#6366f1', dark: '#4f46e5', light: '#a5b4fc' },
+          },
+          fontFamily: {
+            display: ['"DM Sans"', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full font-display text-slate-100 antialiased">
+
+  <nav class="fixed inset-x-0 top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+      <a href="{% url 'engine:dashboard' %}" class="flex items-center gap-2 text-brand font-bold text-xl tracking-tight">
+        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        ResumeForge
+      </a>
+      <div class="flex items-center gap-4">
+        {% if user.is_authenticated %}
+          <a href="{% url 'engine:analyze' %}" class="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-dark transition">+ New Analysis</a>
+          <a href="{% url 'accounts:profile' %}" class="text-sm text-slate-400 hover:text-slate-100 transition">Profile</a>
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="text-sm text-slate-500 hover:text-slate-300 transition">Sign out</button>
+          </form>
+        {% else %}
+          <a href="{% url 'accounts:login' %}" class="text-sm text-slate-400 hover:text-slate-100">Sign in</a>
+          <a href="{% url 'accounts:register' %}" class="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-dark transition">Get started</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-16 min-h-full">
+    {% if messages %}
+      <div class="mx-auto max-w-7xl px-6 pt-4 space-y-2">
+        {% for message in messages %}
+          <div class="flex items-start gap-3 rounded-xl border px-4 py-3 text-sm
+            {% if message.tags == 'error' %}border-red-700/50 bg-red-900/30 text-red-300
+            {% elif message.tags == 'success' %}border-emerald-700/50 bg-emerald-900/30 text-emerald-300
+            {% else %}border-brand/30 bg-brand/10 text-brand-light{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ full_name }} — Resume</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Georgia', 'Times New Roman', serif; font-size: 10.5pt; line-height: 1.45; color: #1a1a1a; }
+    a { color: #1a1a1a; text-decoration: none; }
+    .resume-header { margin-bottom: 12pt; text-align: center; }
+    .resume-header h1 { font-size: 22pt; letter-spacing: -0.02em; }
+    .contact-line { font-size: 8.5pt; color: #444; margin-top: 4pt; }
+    .contact-line span + span::before { content: " · "; }
+    h2 { font-size: 9pt; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1pt solid #1a1a1a; margin: 11pt 0 4pt; padding-bottom: 1.5pt; }
+    p  { margin: 3pt 0; font-size: 10pt; }
+    ul { margin: 3pt 0 3pt 16pt; }
+    li { margin-bottom: 1.5pt; font-size: 10pt; }
+    strong.highlight { font-weight: bold; }
+    .pre-text { white-space: pre-wrap; font-family: inherit; font-size: 10pt; }
+    section { page-break-inside: avoid; }
+    .targeting-note { margin-top: 14pt; padding-top: 4pt; border-top: 0.5pt solid #ccc; font-size: 7.5pt; color: #888; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="resume-header">
+  <h1>{{ full_name }}</h1>
+  <div class="contact-line">
+    {% if email %}<span>{{ email }}</span>{% endif %}
+    {% if phone %}<span>{{ phone }}</span>{% endif %}
+    {% if location %}<span>{{ location }}</span>{% endif %}
+    {% if linkedin_url %}<span><a href="{{ linkedin_url }}">{{ linkedin_url }}</a></span>{% endif %}
+    {% if portfolio_url %}<span><a href="{{ portfolio_url }}">{{ portfolio_url }}</a></span>{% endif %}
+  </div>
+</div>
+
+{% if professional_summary %}
+<section>
+  <h2>Professional Summary</h2>
+  <p>{{ professional_summary|safe }}</p>
+</section>
+{% endif %}
+
+{% if work_experience %}
+<section>
+  <h2>Experience</h2>
+  <div class="pre-text">{{ work_experience|safe }}</div>
+</section>
+{% endif %}
+
+{% if education %}
+<section>
+  <h2>Education</h2>
+  <div class="pre-text">{{ education }}</div>
+</section>
+{% endif %}
+
+{% if skills %}
+<section>
+  <h2>Skills</h2>
+  <p>{{ skills|safe }}</p>
+</section>
+{% endif %}
+
+{% if projects %}
+<section>
+  <h2>Projects</h2>
+  <div class="pre-text">{{ projects|safe }}</div>
+</section>
+{% endif %}
+
+{% if certifications %}
+<section>
+  <h2>Certifications</h2>
+  <div class="pre-text">{{ certifications }}</div>
+</section>
+{% endif %}
+
+{% if awards %}
+<section>
+  <h2>Awards & Honours</h2>
+  <div class="pre-text">{{ awards }}</div>
+</section>
+{% endif %}
+
+{% if job_title %}
+<div class="targeting-note">
+  Tailored for: {{ job_title }}{% if company_name %} at {{ company_name }}{% endif %}
+</div>
+{% endif %}
+
+</body>
+</html>

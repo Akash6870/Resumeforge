@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}{% if job_app %}Analysis — {{ job_app.job_title }}{% else %}New Analysis{% endif %} — ResumeForge{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-6 py-10">
+
+{% if not job_app %}
+  <!-- NEW ANALYSIS FORM -->
+  <div class="mx-auto max-w-2xl">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-white">Analyze a Job Description</h1>
+      <p class="mt-1.5 text-sm text-slate-400">Paste the full JD. Our NLP pipeline will score your resume and surface keyword gaps.</p>
+    </div>
+    <form method="post" action="{% url 'engine:analyze' %}">
+      {% csrf_token %}
+      <div class="space-y-5">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5" for="id_job_title">Job Title *</label>
+            <input type="text" name="job_title" id="id_job_title" required placeholder="e.g. Senior Backend Engineer"
+              class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5" for="id_company_name">Company (optional)</label>
+            <input type="text" name="company_name" id="id_company_name" placeholder="e.g. Acme Corp"
+              class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5" for="id_job_description">Job Description *</label>
+          <textarea name="job_description" id="id_job_description" required rows="16"
+            placeholder="Paste the complete job description here…"
+            class="w-full rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-3 text-sm text-slate-100 placeholder-slate-500 font-mono leading-relaxed focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand transition resize-y"></textarea>
+        </div>
+        <button type="submit" class="w-full rounded-xl bg-brand py-3 text-sm font-bold text-white hover:bg-brand-dark transition-all shadow-xl shadow-brand/30 flex items-center justify-center gap-2">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Run NLP Analysis
+        </button>
+      </div>
+    </form>
+  </div>
+
+{% else %}
+  <!-- RESULTS VIEW -->
+  <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <a href="{% url 'engine:dashboard' %}" class="text-xs text-slate-500 hover:text-slate-300 transition">← Dashboard</a>
+      <h1 class="mt-1 text-2xl font-bold text-white">{{ job_app.job_title }}</h1>
+      {% if job_app.company_name %}<p class="text-sm text-slate-400">{{ job_app.company_name }}</p>{% endif %}
+    </div>
+    <div class="flex items-center gap-3 flex-wrap">
+      <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1
+        {% if job_app.status == 'done' %}bg-emerald-900/50 text-emerald-400 ring-emerald-700/50
+        {% elif job_app.status == 'analyzing' %}bg-brand/15 text-brand-light ring-brand/30
+        {% elif job_app.status == 'error' %}bg-red-900/50 text-red-400 ring-red-700/50
+        {% else %}bg-slate-800 text-slate-400 ring-slate-700{% endif %}">
+        {{ job_app.get_status_display }}
+      </span>
+      {% if job_app.status == 'done' %}
+        {% if pending_resume %}
+          <span id="pdf-spinner" class="inline-flex items-center gap-2 text-xs text-slate-400">
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+            </svg>
+            Compiling PDF…
+          </span>
+        {% elif latest_resume %}
+          <a href="{% url 'engine:pdf_download' latest_resume.pk %}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition shadow-lg shadow-emerald-900/40">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download ATS Resume
+          </a>
+        {% else %}
+          <form method="post" action="{% url 'engine:generate_pdf' job_app.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-dark transition shadow-lg shadow-brand/25">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Generate ATS Resume PDF
+            </button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  {% if job_app.status == 'analyzing' or job_app.status == 'pending' %}
+  <div class="rounded-2xl border border-brand/20 bg-brand/5 px-6 py-12 text-center">
+    <svg class="mx-auto h-10 w-10 animate-spin text-brand mb-4" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+    </svg>
+    <p class="text-sm font-medium text-brand-light">NLP analysis running…</p>
+    <p class="text-xs text-slate-500 mt-1">Usually takes 5–15 seconds. Page refreshes automatically.</p>
+  </div>
+
+  {% else %}
+  <div class="grid gap-6 lg:grid-cols-3">
+
+    <!-- Score -->
+    <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 flex flex-col items-center justify-center text-center">
+      <p class="text-xs font-medium uppercase tracking-widest text-slate-500 mb-4">ATS Match Score</p>
+      <div class="relative h-28 w-28">
+        <svg class="h-28 w-28 -rotate-90" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1e293b" stroke-width="3.5"/>
+          <circle cx="18" cy="18" r="15.9" fill="none"
+            stroke="{% if job_app.similarity_score >= 70 %}#34d399{% elif job_app.similarity_score >= 40 %}#f59e0b{% else %}#f87171{% endif %}"
+            stroke-width="3.5"
+            stroke-dasharray="{{ job_app.similarity_score|default:0 }} 100"
+            stroke-linecap="round"/>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-3xl font-bold text-white">{{ job_app.similarity_score|floatformat:0|default:"—" }}</span>
+          <span class="text-xs text-slate-500">/ 100</span>
+        </div>
+      </div>
+      <p class="mt-4 text-xs text-slate-400 leading-relaxed max-w-[160px]">
+        {% if job_app.similarity_score %}
+          {% if job_app.similarity_score >= 70 %}Strong match — focus on tailoring bullet points.
+          {% elif job_app.similarity_score >= 40 %}Moderate match — add the missing keywords below.
+          {% else %}Low match — significant keyword gaps detected.{% endif %}
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- Missing -->
+    <div class="rounded-2xl border border-red-900/30 bg-slate-900 p-6">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-white">Missing Keywords</h2>
+        <span class="rounded-full bg-red-900/60 px-2 py-0.5 text-xs font-bold text-red-400">{{ job_app.missing_keywords|length }}</span>
+      </div>
+      <p class="mb-4 text-xs text-slate-500">Add these to your profile to improve your ATS score.</p>
+      <div class="flex flex-wrap gap-2">
+        {% for kw in job_app.missing_keywords %}
+          <span class="rounded-lg border border-red-800/50 bg-red-900/30 px-2.5 py-1 text-xs font-mono text-red-300">{{ kw }}</span>
+        {% empty %}
+          <p class="text-sm text-slate-500 italic">No gaps — excellent coverage!</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Matching -->
+    <div class="rounded-2xl border border-emerald-900/30 bg-slate-900 p-6">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-white">Matching Keywords</h2>
+        <span class="rounded-full bg-emerald-900/60 px-2 py-0.5 text-xs font-bold text-emerald-400">{{ job_app.matching_keywords|length }}</span>
+      </div>
+      <p class="mb-4 text-xs text-slate-500">These terms appear in both your profile and the JD.</p>
+      <div class="flex flex-wrap gap-2">
+        {% for kw in job_app.matching_keywords %}
+          <span class="rounded-lg border border-emerald-800/50 bg-emerald-900/30 px-2.5 py-1 text-xs font-mono text-emerald-300">{{ kw }}</span>
+        {% empty %}
+          <p class="text-sm text-slate-500 italic">No matches yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if job_app.jd_keywords %}
+  <div class="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <h2 class="mb-3 text-sm font-semibold text-white">All JD Keywords (ranked by TF-IDF weight)</h2>
+    <div class="flex flex-wrap gap-2">
+      {% for kw in job_app.jd_keywords %}
+        <span class="rounded-md bg-slate-800 px-2 py-0.5 text-xs font-mono text-slate-400">{{ kw }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+{% endif %}
+</div>
+
+{% if job_app %}
+<div id="js-state"
+  data-status="{{ job_app.status }}"
+  data-pending-pk="{% if pending_resume %}{{ pending_resume.pk }}{% endif %}"
+></div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if job_app %}
+<script>
+(function () {
+  const state = document.getElementById("js-state").dataset;
+  const status = state.status;
+
+  if (status === "analyzing" || status === "pending") {
+    setTimeout(() => location.reload(), 4000);
+  }
+
+  const genPk = state.pendingPk;
+  if (!genPk) return;
+
+  const pollPDF = () => {
+    fetch(`/resume/${genPk}/status/`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.ready) {
+          location.reload();
+        } else if (data.status === "failed") {
+          const spinner = document.getElementById("pdf-spinner");
+          if (spinner) {
+            spinner.innerHTML = '<span class="text-red-400 text-xs">PDF generation failed. Try again.</span>';
+          }
+        } else {
+          setTimeout(pollPDF, 3500);
+        }
+      })
+      .catch(() => setTimeout(pollPDF, 5000));
+  };
+
+  setTimeout(pollPDF, 3500);
+})();
+</script>
+{% endif %}
+{% endblock %}

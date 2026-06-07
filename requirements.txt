@@ -1,0 +1,25 @@
+# ─── Core Framework ───────────────────────────────────────────────────────────
+Django==5.1.4
+psycopg2-binary==2.9.10
+
+# ─── Async Task Queue ─────────────────────────────────────────────────────────
+celery==5.4.0
+redis==5.2.1
+django-celery-results==2.5.1
+
+# ─── NLP Stack ────────────────────────────────────────────────────────────────
+scikit-learn==1.6.0
+spacy==3.8.3
+# Run after install: python -m spacy download en_core_web_sm
+
+# ─── Document Generation ──────────────────────────────────────────────────────
+weasyprint==62.3
+
+# ─── Auth & Forms ─────────────────────────────────────────────────────────────
+django-crispy-forms==2.3
+crispy-tailwind==1.0.3
+
+# ─── Utilities ────────────────────────────────────────────────────────────────
+python-decouple==3.8
+Pillow==11.1.0
+whitenoise==6.8.2

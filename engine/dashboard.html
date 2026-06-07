@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ResumeForge{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-7xl px-6 py-10">
+
+  <div class="mb-8 flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-white">Dashboard</h1>
+      <p class="mt-1 text-sm text-slate-400">Your tailored job applications</p>
+    </div>
+    <a href="{% url 'engine:analyze' %}" class="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark transition shadow-lg shadow-brand/25">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+      Analyze New Job
+    </a>
+  </div>
+
+  {% if not profile_complete %}
+  <div class="mb-6 flex items-center gap-4 rounded-2xl border border-amber-700/40 bg-amber-900/20 px-5 py-4">
+    <svg class="h-6 w-6 flex-shrink-0 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+    </svg>
+    <p class="text-sm text-amber-300">
+      Your career profile is empty.
+      <a href="{% url 'accounts:profile' %}" class="font-semibold underline underline-offset-2 hover:text-amber-100">Complete your profile</a>
+      before running an analysis.
+    </p>
+  </div>
+  {% endif %}
+
+  {% if applications %}
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    {% for app in applications %}
+    <div class="group flex flex-col rounded-2xl border border-slate-800 bg-slate-900 p-5 hover:border-brand/40 transition-all duration-200 hover:shadow-xl hover:shadow-brand/10">
+
+      <div class="mb-3 flex items-center justify-between">
+        <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium
+          {% if app.status == 'done' %}bg-emerald-900/50 text-emerald-400 ring-1 ring-emerald-700/50
+          {% elif app.status == 'analyzing' %}bg-brand/15 text-brand-light ring-1 ring-brand/30 animate-pulse
+          {% elif app.status == 'error' %}bg-red-900/50 text-red-400 ring-1 ring-red-700/50
+          {% else %}bg-slate-800 text-slate-400 ring-1 ring-slate-700{% endif %}">
+          <span class="h-1.5 w-1.5 rounded-full
+            {% if app.status == 'done' %}bg-emerald-400
+            {% elif app.status == 'analyzing' %}bg-brand
+            {% elif app.status == 'error' %}bg-red-400
+            {% else %}bg-slate-500{% endif %}"></span>
+          {{ app.get_status_display }}
+        </span>
+        <span class="text-xs text-slate-600">{{ app.created_at|date:"M j, Y" }}</span>
+      </div>
+
+      <h2 class="text-base font-semibold text-white line-clamp-2 leading-snug">{{ app.job_title }}</h2>
+      {% if app.company_name %}<p class="mt-0.5 text-sm text-slate-400">{{ app.company_name }}</p>{% endif %}
+
+      {% if app.similarity_score is not None %}
+      <div class="my-4 flex items-center gap-3">
+        <div class="relative h-12 w-12 flex-shrink-0">
+          <svg class="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1e293b" stroke-width="3"/>
+            <circle cx="18" cy="18" r="15.9" fill="none"
+              stroke="{% if app.similarity_score >= 70 %}#34d399{% elif app.similarity_score >= 40 %}#f59e0b{% else %}#f87171{% endif %}"
+              stroke-width="3"
+              stroke-dasharray="{{ app.similarity_score }} 100"
+              stroke-linecap="round"/>
+          </svg>
+          <span class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{{ app.similarity_score|floatformat:0 }}%</span>
+        </div>
+        <div class="text-xs text-slate-400 leading-relaxed">
+          <span class="font-medium text-slate-200">{{ app.matching_keywords|length }}</span> matching<br>
+          <span class="font-medium text-red-400">{{ app.missing_keywords|length }}</span> gaps
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="mt-auto flex items-center gap-2 pt-3 border-t border-slate-800">
+        <a href="{% url 'engine:analysis_detail' app.pk %}" class="flex-1 rounded-lg bg-slate-800 py-1.5 text-center text-xs font-medium text-slate-300 hover:bg-slate-700 transition">View Analysis</a>
+        {% with latest=app.generated_resumes.all.0 %}
+          {% if latest and latest.status == 'ready' %}
+          <a href="{% url 'engine:pdf_download' latest.pk %}" class="flex-1 rounded-lg bg-emerald-900/60 py-1.5 text-center text-xs font-medium text-emerald-400 hover:bg-emerald-900 transition">↓ Download PDF</a>
+          {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if is_paginated %}
+  <div class="mt-8 flex justify-center gap-2">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="rounded-lg px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 transition">← Prev</a>{% endif %}
+    <span class="rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-200">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="rounded-lg px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 transition">Next →</a>{% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 py-24 text-center">
+    <svg class="h-16 w-16 text-slate-700 mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <h2 class="text-xl font-semibold text-slate-400">No analyses yet</h2>
+    <p class="mt-2 text-sm text-slate-600 max-w-xs">Paste a job description and we'll match it against your career profile instantly.</p>
+    <a href="{% url 'engine:analyze' %}" class="mt-6 rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark transition shadow-lg shadow-brand/25">Analyze Your First Job</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
